@@ -1,15 +1,15 @@
 from z3 import *
 
-BITLEN = 1 # Number of bits in input
-STEPS = 1 # How many steps to take (e.g. time)
-WIDTH = 2 # How many operations/values can be stored in parallel, has to be at least BITLEN * #inputs
+BITLEN = 4 # Number of bits in input
+STEPS = 1 # How many steps to take in between input and output layers (e.g. time)
+WIDTH = 8 # How many operations/values can be stored in parallel, has to be at least BITLEN * #inputs
 
 # Input variables
 x = BitVec('x', BITLEN)
 y = BitVec('y', BITLEN)
 
 # Define operations used
-op_list = [BitVecRef.__and__, BitVecRef.__or__, BitVecRef.__xor__, BitVecRef.__xor__]
+op_list = [BitVecRef.__and__, BitVecRef.__or__, BitVecRef.__xor__]
 unary_op_list = [BitVecRef.__invert__]
 for uop in unary_op_list:
     op_list.append(lambda x, y : uop(x))
@@ -18,7 +18,7 @@ for uop in unary_op_list:
 def chooseFunc(i, x, y):
     res = 0
     for ind, op in enumerate(op_list):
-        res = res + (ind == i) * op(x, y)
+        res = If(ind == i, op (x, y), res)
     return res
 
 s = Solver()
