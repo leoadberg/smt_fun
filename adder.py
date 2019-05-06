@@ -1,16 +1,17 @@
 from z3 import *
 
-BITLEN = 4 # Number of bits in input
+BITLEN = 2 # Number of bits in input
 STEPS = 0 # How many steps to take in between input and output layers (e.g. time)
-WIDTH = 8 # How many operations/values can be stored in parallel, has to be at least BITLEN * #inputs
+WIDTH = 4 # How many operations/values can be stored in parallel, has to be at least BITLEN * #inputs
 
 # Input variables
 x = BitVec('x', BITLEN)
 y = BitVec('y', BITLEN)
 
 # Define operations used
+pass_func = lambda x: x
 op_list = [BitVecRef.__and__, BitVecRef.__or__, BitVecRef.__xor__]
-unary_op_list = [BitVecRef.__invert__]
+unary_op_list = [BitVecRef.__invert__, pass_func]
 for uop in unary_op_list:
     op_list.append(lambda x, y : uop(x))
 
