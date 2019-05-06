@@ -1,7 +1,7 @@
 from z3 import *
 
 BITLEN = 4 # Number of bits in input
-STEPS = 1 # How many steps to take in between input and output layers (e.g. time)
+STEPS = 0 # How many steps to take in between input and output layers (e.g. time)
 WIDTH = 8 # How many operations/values can be stored in parallel, has to be at least BITLEN * #inputs
 
 # Input variables
@@ -34,11 +34,13 @@ for i in range(BITLEN * 2, WIDTH):
 steps.append(firststep)
 
 # Generate remaining steps
-for i in range(1, STEPS + 1):
-    this_step = Array("step_%d" % i, IntSort(), BitVecSort(1))
+for i in range(1, STEPS + 2):
+    final_step = i == STEPS + 1
+
+    this_step = Array("finalstep" if final_step else "step_%d" % i, IntSort(), BitVecSort(1))
     last_step = steps[-1]
 
-    for j in range(WIDTH):
+    for j in range(BITLEN if final_step else WIDTH):
         func_ind = Int("func_%d_%d" % (i,j))
         s.add(func_ind >= 0, func_ind < len(op_list))
 
@@ -53,7 +55,7 @@ for i in range(1, STEPS + 1):
 
     steps.append(this_step)
 
-# Set the result to the first BITLEN bits of the last step
+# Set the result to the concatenated bits of the last step
 if BITLEN == 1:
     result = Select(steps[-1], 0)
 else:
