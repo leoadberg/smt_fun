@@ -3,7 +3,7 @@
 from z3 import *
 
 BITLEN = 1 # Number of bits in input
-STEPS = 1 # How many steps to take (e.g. time)
+STEPS = 0 # How many steps to take (e.g. time)
 WIDTH = 2 # How many operations/values can be stored in parallel, has to be at least BITLEN * #inputs
 
 # Input variables
@@ -15,8 +15,9 @@ s = Solver()
 steps = []
 
 # Define operations used
-op_list = [BitVecRef.__and__, BitVecRef.__or__, BitVecRef.__xor__, BitVecRef.__xor__]
-unary_op_list = [BitVecRef.__invert__]
+pass_func = lambda x: x
+op_list = [BitVecRef.__and__, BitVecRef.__or__, BitVecRef.__xor__]
+unary_op_list = [BitVecRef.__invert__, pass_func]
 for uop in unary_op_list:
     op_list.append(lambda x, y : uop(x))
 
@@ -24,14 +25,14 @@ for uop in unary_op_list:
 def chooseFunc(i, x, y):
     res = 0
     for ind, op in enumerate(op_list):
-        res = res + (ind == i) * op(x, y)
+        res = If(ind == i, op(x, y), res)
     return res
 
 # Chooses an input to use by setting all others to 0
 def chooseVar(step_ind, ind):
     res = 0
     for i, node in enumerate(steps[step_ind]):
-        res = res + (i == ind) * node
+        res = If(ind == i, node, res)
     return res
 
 # First step is just the bits of the input padded with constants
@@ -44,11 +45,13 @@ for i in range(BITLEN * 2, WIDTH):
 steps.append(firststep)
 
 # Generate remaining steps
-for i in range(1, STEPS + 1):
+for i in range(1, STEPS + 2):
+    final_step = i == STEPS + 1
+
     this_step = []
     last_step = steps[-1]
 
-    for j in range(WIDTH):
+    for j in range(BITLEN if final_step else WIDTH):
         func_ind = Int("func_%d_%d" % (i,j))
         s.add(func_ind >= 0, func_ind < len(op_list))
 
@@ -73,7 +76,7 @@ else:
     result = Concat(*steps[-1][:BITLEN])
 
 # Set goal
-goal = x | y
+goal = x ^ y
 s.add(ForAll([x, y], goal == result))
 
 print(s)

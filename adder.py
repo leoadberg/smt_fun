@@ -1,8 +1,8 @@
 from z3 import *
 
-BITLEN = 2 # Number of bits in input
+BITLEN = 1 # Number of bits in input
 STEPS = 0 # How many steps to take in between input and output layers (e.g. time)
-WIDTH = 4 # How many operations/values can be stored in parallel, has to be at least BITLEN * #inputs
+WIDTH = 2 # How many operations/values can be stored in parallel, has to be at least BITLEN * #inputs
 
 # Input variables
 x = BitVec('x', BITLEN)
@@ -19,7 +19,7 @@ for uop in unary_op_list:
 def chooseFunc(i, x, y):
     res = 0
     for ind, op in enumerate(op_list):
-        res = If(ind == i, op (x, y), res)
+        res = If(ind == i, op(x, y), res)
     return res
 
 s = Solver()
@@ -63,7 +63,7 @@ else:
     result = Concat(*[Select(steps[-1], i) for i in range(BITLEN)])
 
 # Set goal
-goal = x | y
+goal = x ^ y
 s.add(ForAll([x, y], goal == result))
 
 print(s)
